@@ -1,0 +1,278 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex, nofollow">
+    <title>sisäänkirjautuminen</title>
+    <style>
+        html, body {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        #dialogText {
+            padding: 10px 30px;
+            color: white;
+            background-color: #333333;
+        }
+        
+        #dialogWrap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: table;
+            background-color: #EEEEEE;
+        }
+        
+        #dialogWrapCell {
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+        }
+        
+        #mainDialog {
+            max-width: 400px;
+            margin: 5px;
+            border: solid #AAAAAA 1px;
+            border-radius: 10px;
+            box-shadow: 3px 3px 5px 3px #AAAAAA;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: #FFFFFF;
+            overflow: hidden;
+            text-align: left;
+        }
+        #passArea {
+            padding: 20px 30px;
+            background-color: white;
+        }
+        #passArea > * {
+            margin: 5px auto;
+        }
+        #pass {
+            width: 100%;
+            height: 40px;
+            font-size: 30px;
+        }
+        
+        #messageWrapper {
+            float: left;
+            vertical-align: middle;
+            line-height: 30px;
+        }
+        
+        .notifyText {
+            display: none;
+        }
+        
+        #invalidPass {
+            color: red;
+        }
+        
+        #success {
+            color: green;
+        }
+        
+        #submitPass {
+            font-size: 20px;
+            border-radius: 5px;
+            background-color: #E7E7E7;
+            border: solid gray 1px;
+            float: right;
+        }
+        #contentFrame {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        #video {
+            position: fixed;
+            right: 0;
+            bottom: 0;
+            min-width: 100%;
+            min-height: 100%;
+        }
+    </style>
+  </head>
+  <body>
+    <iframe id="contentFrame" frameBorder="0" allowfullscreen></iframe>
+    <div id="dialogWrap">
+        <div id="dialogWrapCell">
+            <div id="mainDialog">
+                <div id="dialogText">Takahuone, painamalla 'kirjaudu' hyväksyt riskit. Ethän myöskään laita yksityistietoja salasana-kenttään.</div>
+                <div id="passArea">
+                    <p id="passwordPrompt">Salasana</p>
+                    <input id="pass" type="password" name="pass">
+                    <div>
+                        <span id="messageWrapper">
+                            <span id="invalidPass" class="notifyText">olet väärässä paikassa</span>
+                            <span id="success" class="notifyText">Tervetuloa</span>
+                            &nbsp;
+                        </span>
+                        <button id="submitPass" type="button">kirjaudu</button>
+                        <div style="clear: both;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/aes.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.2/rollups/pbkdf2.js"></script>
+    <script>
+        /*! srcdoc-polyfill - v0.1.1 - 2013-03-01
+        * http://github.com/jugglinmike/srcdoc-polyfill/
+        * Copyright (c) 2013 Mike Pennisi; Licensed MIT */
+        (function( window, document, undefined ) {
+	
+	        var idx, iframes;
+	        var _srcDoc = window.srcDoc;
+	        var isCompliant = !!("srcdoc" in document.createElement("iframe"));
+	        var implementations = {
+		        compliant: function( iframe, content ) {
+
+			        if (content) {
+				        iframe.setAttribute("srcdoc", content);
+			        }
+		        },
+		        legacy: function( iframe, content ) {
+
+			        var jsUrl;
+
+			        if (!iframe || !iframe.getAttribute) {
+				        return;
+			        }
+
+			        if (!content) {
+				        content = iframe.getAttribute("srcdoc");
+			        } else {
+				        iframe.setAttribute("srcdoc", content);
+			        }
+
+			        if (content) {
+				        // The value returned by a script-targeted URL will be used as
+				        // the iFrame's content. Create such a URL which returns the
+				        // iFrame element's `srcdoc` attribute.
+				        jsUrl = "javascript: window.frameElement.getAttribute('srcdoc');";
+
+				        iframe.setAttribute("src", jsUrl);
+
+				        // Explicitly set the iFrame's window.location for
+				        // compatability with IE9, which does not react to changes in
+				        // the `src` attribute when it is a `javascript:` URL, for
+				        // some reason
+				        if (iframe.contentWindow) {
+					        iframe.contentWindow.location = jsUrl;
+				        }
+			        }
+		        }
+	        };
+	        var srcDoc = window.srcDoc = {
+		        // Assume the best
+		        set: implementations.compliant,
+		        noConflict: function() {
+			        window.srcDoc = _srcDoc;
+			        return srcDoc;
+		        }
+	        };
+
+	        // If the browser supports srcdoc, no shimming is necessary
+	        if (isCompliant) {
+		        return;
+	        }
+
+	        srcDoc.set = implementations.legacy;
+
+	        // Automatically shim any iframes already present in the document
+	        iframes = document.getElementsByTagName("iframe");
+	        idx = iframes.length;
+
+	        while (idx--) {
+		        srcDoc.set( iframes[idx] );
+	        }
+
+        }( this, this.document ));
+    </script>
+    <script>
+        var pl = {"salt":"pp5B2UF+NQmICSqawHHQTmpvD9bDMyQ9BOA3TRrMjmk=","iv":"qtYph3L3FIIJga7MVvgwUA==","data":"nDmUS7lcJntqiUpL2XhaAT2JL9hDnlPCXdfBL84g8N7KBC6PvXFXCLLoZO8oDyFph0fYKE4OLIbRd4t7rkd5ZyDcrQwhnTgOchTsW9UslVqGfVJ/ORSVV00HvmWK3VuyehCcdQtlJJQliBRZnMAmcCL0NFeoYK6lohmpZpU32eWfO5STZ6sZYrXun9LEewwtbXwXvqR6hybLMy/VhoNmfQSVShAi0VYWTrU4YuslqNlvXb7S+BUr7tQ+5moy9WZiRkPJtcHHEfoyD1gNaoIKnSO+8r4EbzdBdc3+JjobZFoteUKCeAc9/mAjdDk1qtvAw1H79a6UkVCUEd4K6OeEQ7LFBVbUJHc5jUC4Xx01T0tC4hfnUwZeLyLrMDDiK1OkmgfES+mdL6FSLF2qYeOebX0jANcx19XPKkO4wxTumc9ZrmV4Xp8290M7Fznd2kFS62O3+Y16Ex74AQ9qJ+s4xx5H5DrQk25yEiNzXh5DbbRMqxd/rZJUdbL7l2zg29VTvrsxfpG1vysTnUO968MYX/kfZGdgJgJFr3BQ3GmXvkcenfyvbZg2Cvw4dLbI86BxHBPJcjjgRRH91cOYeSLIstssRuEYZoWxIrE1xECtNBNApZ5p5a9XNPWmIsx7uKM1jbEQFl1SHFEw2/lRA9SDn5JH9c6sc+rur3WZAy1W4FTGz7W8tZXR0HttEHIP98VqnHP7dYW42OXtdSDFG0RBmRzLlPSKkjGaEjysHgkPgl7JU/nUAQT09x6LuE8NnGLK9PHtuDf8+I40TIw7Z/YCIk6SneVhU1mdj8TvWAZ0Va0VYH+firpKf0cZPCZkZdxpIM+vsGmaxgTNB9soFitxuI0WtySfdGL4+Swb8yxxZ8X7O8xNdCfJiN27XEABaOP00qD6ZVnFlj8yG3xU0+5Vjh4UogixjO8t/7otJBilGYxvyAUrNYAhozk2fA0RaHeCua8ydJBVmPWdpy6tNVlUgy3invWRw0MPpgfMBeZY7Or9wA+a483GT+aCF5Jhn9qr"};
+        
+        var submitPass = document.getElementById('submitPass');
+        var passEl = document.getElementById('pass');
+        var invalidPassEl = document.getElementById('invalidPass');
+        var successEl = document.getElementById('success');
+        var contentFrame = document.getElementById('contentFrame');
+        
+        if (pl === "") {
+            submitPass.disabled = true;
+            passEl.disabled = true;
+            alert("This page is meant to be used with the encryption tool. It doesn't work standalone.");
+        }
+        function prank(evt) {
+          var video = document.createElement('video');
+          var source = document.createElement('source');
+          const divs = document.getElementById('dialogWrap');
+
+
+          video.setAttribute('id', 'video');
+          video.setAttribute('loop', 'True');
+          source.setAttribute('src', 'rickroll.mp4');
+          source.setAttribute('type','video/mp4');
+
+          divs.appendChild(video);
+          video.appendChild(source);
+          video.play();
+
+        }
+        function doSubmit(evt) {
+            try {
+                var decrypted = decryptFile(CryptoJS.enc.Base64.parse(pl.data), passEl.value, CryptoJS.enc.Base64.parse(pl.salt), CryptoJS.enc.Base64.parse(pl.iv));
+                if (decrypted === "") throw "No data returned";
+                
+                // Set default iframe link targets to _top so all links break out of the iframe
+                decrypted = decrypted.replace("<head>", "<head><base href=\".\" target=\"_top\">");
+                
+                srcDoc.set(contentFrame, decrypted);
+                
+                successEl.style.display = "inline";
+                passEl.disabled = true;
+                submitPass.disabled = true;
+                setTimeout(function() {
+                    dialogWrap.style.display = "none";
+                }, 1000);
+            } catch (e) {
+                invalidPassEl.style.display = "inline";
+                passEl.value = "";
+                prank();
+            }
+        }
+        
+        submitPass.onclick = doSubmit;
+        passEl.onkeypress = function(e){
+            if (!e) e = window.event;
+            var keyCode = e.keyCode || e.which;
+            invalidPassEl.style.display = "none";
+            if (keyCode == '13'){
+              // Enter pressed
+              doSubmit();
+              return false;
+            }
+        }
+        
+        function decryptFile(contents, password, salt, iv) {
+            var _cp = CryptoJS.lib.CipherParams.create({
+                ciphertext: contents
+            });
+            var key = CryptoJS.PBKDF2(password, salt, { keySize: 256/32, iterations: 100 });
+            var decrypted = CryptoJS.AES.decrypt(_cp, key, {iv: iv});
+            
+            return decrypted.toString(CryptoJS.enc.Utf8);
+        }
+    </script>
+  </body>
+</html>
